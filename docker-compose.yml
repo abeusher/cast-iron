@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_CREATE_TOPICS: "minio:1:1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+
+  postgres:
+    image: postgres:12-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: castiron
+      POSTGRES_USER: castiron
+
+  minio:
+    image: minio/minio
+    environment:
+      MINIO_ACCESS_KEY: castiron
+      MINIO_SECRET_KEY: castiron
+      MINIO_NOTIFY_KAFKA_BROKERS_docker: kafka:9092
+      MINIO_NOTIFY_KAFKA_ENABLE_docker: 'on'
+      MINIO_NOTIFY_KAFKA_TOPIC_docker: minio
+    command: server /data
+    volumes:
+      - ./minio/data:/data
+    ports:
+      - "9000:9000"
+    depends_on:
+      - kafka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
