@@ -1,0 +1,13 @@
+image: python:3.8-alpine
+
+pages:
+  stage: deploy
+  only:
+    - main
+  script:
+    - pip install mkdocs-material
+    - cd documentation
+    - mkdocs build --site-dir ${CI_PROJECT_DIR}/public
+  artifacts:
+    paths:
+      - public
