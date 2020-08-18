@@ -137,3 +137,6 @@ documentation/site/
 
 # MinIO Data
 minio/data
+
+# Database Related
+databases/postgres/data/
